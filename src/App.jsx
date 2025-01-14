@@ -64,6 +64,12 @@ function App() {
     saveToLS();
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleAdd();
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -75,6 +81,7 @@ function App() {
           <h1 className="text-lg font-bold">Add a Todo</h1>
           <input
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
             value={todo}
             type="text"
             className="w-full rounded-lg px-5 py-1"
@@ -123,7 +130,11 @@ function App() {
                       onClick={(e) => {
                         handleEdit(e, item.id);
                       }}
-                      className="bg-violet-800 hover:bg-violet-950 p-2 py-1 text-sm font-bold text-white rounded-md mx-1"
+                      className={
+                        item.isCompleted
+                          ? "hidden"
+                          : "bg-violet-800 hover:bg-violet-950 p-2 py-1 text-sm font-bold text-white rounded-md mx-1"
+                      }
                     >
                       <CiEdit />
                     </button>
