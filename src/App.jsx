@@ -100,20 +100,15 @@ function App() {
     <>
       <Navbar />
 
-      {/* ==== NOTEPAD CONTAINER ==== */}
       <div className="md:container mx-auto my-16 max-w-md rounded-xl shadow-xl overflow-hidden bg-[#faf5ee]">
-        {/* Top “spiral” band */}
         <div className="h-4 w-full bg-gray-500"></div>
 
-        {/* Main Content (paper) */}
         <div className="p-6">
-          {/* === HEADER === */}
           <h1 className="font-semibold text-center text-2xl text-gray-800 pb-2">
             iTask – Manage your daily tasks at one place
           </h1>
           <div className="border-t border-gray-200 mb-4"></div>
 
-          {/* === ADD TODO FORM === */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
             <h2 className="text-lg font-medium text-gray-700 mb-2">
               Add a Todo
@@ -158,7 +153,6 @@ function App() {
             </button>
           </div>
 
-          {/* === SHOW FINISHED TOGGLE === */}
           <div className="flex items-center mb-2">
             <input
               id="showFinished"
@@ -182,7 +176,6 @@ function App() {
           </div>
           <div className="border-t border-gray-200 mb-4"></div>
 
-          {/* === YOUR TODOS LIST === */}
           <h2 className="text-lg font-medium text-gray-700 mb-2">Your Todos</h2>
           <div className="bg-[#f8f5f2] border border-gray-200 rounded-lg p-4">
             {todos.length === 0 && (
@@ -206,7 +199,6 @@ function App() {
                     transition
                   "
                 >
-                  {/* === Checkbox + Text === */}
                   <div className="flex items-center">
                     <input
                       type="checkbox"
@@ -236,9 +228,7 @@ function App() {
                     </span>
                   </div>
 
-                  {/* === Edit + Delete Buttons === */}
                   <div className="flex items-center space-x-2">
-                    {/* EDIT (tertiary) - only show if not completed */}
                     {!item.isCompleted && (
                       <button
                         onClick={(e) => handleEdit(e, item.id)}
@@ -253,7 +243,6 @@ function App() {
                       </button>
                     )}
 
-                    {/* DELETE (danger) */}
                     <button
                       onClick={(e) => handleDelete(e, item.id)}
                       className="
