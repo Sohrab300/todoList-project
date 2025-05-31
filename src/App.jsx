@@ -7,65 +7,91 @@ import { MdDelete } from "react-icons/md";
 function App() {
   const [todo, setTodo] = useState("");
   const [todos, setTodos] = useState([]);
-  const [showFinished, setshowFinished] = useState(true);
+  const [showFinished, setShowFinished] = useState(true);
+  const [error, setError] = useState(""); // helper text when length ≤ 3
 
+  // Load from localStorage on mount
   useEffect(() => {
-    let todoString = localStorage.getItem("todos");
+    const todoString = localStorage.getItem("todos");
     if (todoString) {
-      let todos = JSON.parse(localStorage.getItem("todos"));
-      setTodos(todos);
+      const stored = JSON.parse(todoString);
+      setTodos(stored);
     }
   }, []);
 
-  const saveToLS = (params) => {
+  // Always save the latest todos array
+  const saveToLS = () => {
     localStorage.setItem("todos", JSON.stringify(todos));
   };
 
-  const toggleFinished = (e) => {
-    setshowFinished(!showFinished);
+  const toggleFinished = () => {
+    setShowFinished(!showFinished);
   };
 
   const handleAdd = () => {
-    setTodos([...todos, { id: uuidv4(), todo, isCompleted: false }]);
+    // If user somehow bypasses disabled state, just guard again:
+    if (todo.trim().length < 4) {
+      setError("Task must be at least 4 characters.");
+      return;
+    }
+
+    const newTodoObj = {
+      id: uuidv4(),
+      todo: todo.trim(),
+      isCompleted: false,
+    };
+
+    const updated = [...todos, newTodoObj];
+    setTodos(updated);
     setTodo("");
+    setError("");
     saveToLS();
   };
 
   const handleEdit = (e, id) => {
-    let t = todos.filter((i) => i.id === id);
-    setTodo(t[0].todo);
-    let newTodos = todos.filter((item) => {
-      return item.id !== id;
-    });
-    setTodos(newTodos);
+    e.stopPropagation();
+    const found = todos.find((i) => i.id === id);
+    if (!found) return;
+
+    setTodo(found.todo);
+    // Remove that item from the list so, when user clicks “Add,” it replaces it
+    const filtered = todos.filter((item) => item.id !== id);
+    setTodos(filtered);
+    setError("");
     saveToLS();
   };
 
   const handleDelete = (e, id) => {
-    let newTodos = todos.filter((item) => {
-      return item.id !== id;
-    });
-    setTodos(newTodos);
+    e.stopPropagation();
+    const filtered = todos.filter((item) => item.id !== id);
+    setTodos(filtered);
     saveToLS();
   };
 
   const handleChange = (e) => {
     setTodo(e.target.value);
+    if (e.target.value.trim().length >= 4) {
+      setError("");
+    }
   };
 
   const handleCheckbox = (e) => {
-    let id = e.target.name;
-    let index = todos.findIndex((item) => {
-      return item.id === id;
-    });
-    let newTodos = [...todos];
+    const id = e.target.name;
+    const index = todos.findIndex((item) => item.id === id);
+    if (index === -1) return;
+
+    const newTodos = [...todos];
     newTodos[index].isCompleted = !newTodos[index].isCompleted;
     setTodos(newTodos);
     saveToLS();
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && todo.length > 3) {
+    if (e.key === "Enter") {
+      if (todo.trim().length < 4) {
+        setError("Task must be at least 4 characters.");
+        return;
+      }
       handleAdd();
     }
   };
@@ -73,84 +99,177 @@ function App() {
   return (
     <>
       <Navbar />
-      <div className="mx-3 md:container md:mx-auto my-5 rounded-xl p-5 bg-violet-100 min-h-[80vh] md:w-[35%]">
-        <h1 className="font-bold text-center text-xl">
-          iTask - Manage your daily tasks at one place
-        </h1>
-        <div className="addTodo my-5 flex flex-col gap-4">
-          <h1 className="text-lg font-bold">Add a Todo</h1>
-          <input
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            value={todo}
-            type="text"
-            className="w-full rounded-lg px-5 py-1"
-          />
-          <button
-            onClick={handleAdd}
-            disabled={todo.length <= 3}
-            className="bg-violet-800 disabled:bg-violet-900 hover:bg-violet-950 p-2 py-1 text-sm font-bold text-white rounded-md"
-          >
-            Add
-          </button>
-        </div>
-        <input
-          className="my-4"
-          onChange={toggleFinished}
-          type="checkbox"
-          checked={showFinished}
-          name=""
-          id=""
-        />{" "}
-        <label className="mx-2" htmlFor="show">
-          Show Finished
-        </label>
-        <div className="h-[1px] bg-black opacity-15 w-[90%] mx-auto my-1"></div>
-        <h2 className="text-lg font-bold">Your Todos</h2>
-        <div className="todos">
-          {todos.length == 0 && <div className="m-5">No Todos to display</div>}
-          {todos.map((item) => {
-            return (
-              (showFinished || !item.isCompleted) && (
-                <div key={item.id} className="todo flex my-3 justify-between">
-                  <div className="flex gap-5 items-center">
+
+      {/* ==== NOTEPAD CONTAINER ==== */}
+      <div className="md:container mx-auto my-16 max-w-md rounded-xl shadow-xl overflow-hidden bg-[#faf5ee]">
+        {/* Top “spiral” band */}
+        <div className="h-4 w-full bg-gray-500"></div>
+
+        {/* Main Content (paper) */}
+        <div className="p-6">
+          {/* === HEADER === */}
+          <h1 className="font-semibold text-center text-2xl text-gray-800 pb-2">
+            iTask – Manage your daily tasks at one place
+          </h1>
+          <div className="border-t border-gray-200 mb-4"></div>
+
+          {/* === ADD TODO FORM === */}
+          <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+            <h2 className="text-lg font-medium text-gray-700 mb-2">
+              Add a Todo
+            </h2>
+            <input
+              type="text"
+              value={todo}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Type at least 4 characters..."
+              className="
+                w-full
+                bg-white
+                border border-gray-300
+                rounded-lg
+                px-4 py-2
+                text-gray-800
+                focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200
+                transition
+              "
+            />
+            {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+
+            <button
+              onClick={handleAdd}
+              disabled={todo.trim().length < 4}
+              className={`
+                mt-4
+                w-full
+                text-white
+                text-sm font-semibold
+                py-2 rounded-lg
+                transition
+                ${
+                  todo.trim().length >= 4
+                    ? "bg-purple-600 hover:bg-purple-700"
+                    : "bg-gray-300 cursor-not-allowed"
+                }
+              `}
+            >
+              Add
+            </button>
+          </div>
+
+          {/* === SHOW FINISHED TOGGLE === */}
+          <div className="flex items-center mb-2">
+            <input
+              id="showFinished"
+              type="checkbox"
+              checked={showFinished}
+              onChange={toggleFinished}
+              className="
+                h-5 w-5
+                text-purple-600
+                border-gray-300 rounded
+                focus:ring-purple-500
+                transition
+              "
+            />
+            <label
+              htmlFor="showFinished"
+              className="ml-2 text-gray-800 text-sm font-medium"
+            >
+              Show Finished
+            </label>
+          </div>
+          <div className="border-t border-gray-200 mb-4"></div>
+
+          {/* === YOUR TODOS LIST === */}
+          <h2 className="text-lg font-medium text-gray-700 mb-2">Your Todos</h2>
+          <div className="bg-[#f8f5f2] border border-gray-200 rounded-lg p-4">
+            {todos.length === 0 && (
+              <div className="text-center text-gray-500 py-4">
+                No Todos to display
+              </div>
+            )}
+
+            {todos.map((item) => {
+              // Only render if showFinished is true OR item.isCompleted is false
+              if (!showFinished && item.isCompleted) return null;
+
+              return (
+                <div
+                  key={item.id}
+                  className="
+                    flex items-center justify-between
+                    py-3 px-4
+                    hover:bg-gray-100
+                    rounded-md
+                    transition
+                  "
+                >
+                  {/* === Checkbox + Text === */}
+                  <div className="flex items-center">
                     <input
-                      onChange={handleCheckbox}
                       type="checkbox"
-                      checked={item.isCompleted}
                       name={item.id}
-                      id=""
+                      checked={item.isCompleted}
+                      onChange={handleCheckbox}
+                      className="
+                        h-5 w-5
+                        text-purple-600
+                        border-gray-300 rounded
+                        focus:ring-purple-500
+                        transition
+                      "
                     />
-                    <div className={item.isCompleted ? "line-through" : ""}>
+                    <span
+                      className={`
+                        ml-3
+                        text-sm
+                        ${
+                          item.isCompleted
+                            ? "text-gray-400 line-through"
+                            : "text-gray-800"
+                        }
+                      `}
+                    >
                       {item.todo}
-                    </div>
+                    </span>
                   </div>
-                  <div className="buttons flex h-full">
+
+                  {/* === Edit + Delete Buttons === */}
+                  <div className="flex items-center space-x-2">
+                    {/* EDIT (tertiary) - only show if not completed */}
+                    {!item.isCompleted && (
+                      <button
+                        onClick={(e) => handleEdit(e, item.id)}
+                        className="
+                          p-1
+                          text-gray-600 hover:text-gray-800
+                          transition
+                          focus:outline-none
+                        "
+                      >
+                        <CiEdit size={22} />
+                      </button>
+                    )}
+
+                    {/* DELETE (danger) */}
                     <button
-                      onClick={(e) => {
-                        handleEdit(e, item.id);
-                      }}
-                      className={
-                        item.isCompleted
-                          ? "hidden"
-                          : "bg-violet-800 hover:bg-violet-950 p-2 py-1 text-sm font-bold text-white rounded-md mx-1"
-                      }
+                      onClick={(e) => handleDelete(e, item.id)}
+                      className="
+                        p-1
+                        text-red-600 hover:text-red-800
+                        transition
+                        focus:outline-none
+                      "
                     >
-                      <CiEdit />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        handleDelete(e, item.id);
-                      }}
-                      className="bg-violet-800 hover:bg-violet-950 p-2 py-1 text-sm font-bold text-white rounded-md mx-1"
-                    >
-                      <MdDelete />
+                      <MdDelete size={22} />
                     </button>
                   </div>
                 </div>
-              )
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </>
