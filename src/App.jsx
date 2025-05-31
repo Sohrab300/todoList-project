@@ -65,7 +65,7 @@ function App() {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && todo.length > 3) {
       handleAdd();
     }
   };
@@ -91,7 +91,7 @@ function App() {
             disabled={todo.length <= 3}
             className="bg-violet-800 disabled:bg-violet-900 hover:bg-violet-950 p-2 py-1 text-sm font-bold text-white rounded-md"
           >
-            Save
+            Add
           </button>
         </div>
         <input
