@@ -7,3 +7,22 @@ body {
   --tw-bg-opacity: 1;
   background-color: rgb(207, 203, 231);
 }
+
+/* In index.css (or wherever Tailwind’s @tailwind directives live) */
+@layer base {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .heading {
+    font-family: "Work Sans", sans-serif;
+  }
+
+  body,
+  .todo-text {
+    font-family: "Libre Baskerville", serif;
+  }
+}
